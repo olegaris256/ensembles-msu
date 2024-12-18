@@ -1,5 +1,6 @@
 from typing import TypedDict
 
+import pandas as pd
 import numpy as np
 import numpy.typing as npt
 
@@ -71,5 +72,13 @@ def whether_to_stop(convergence_history: ConvergenceHistory, patience: int) -> b
     KeyError
         If neither 'train' nor 'val' key is present in the convergence_history.
     """
-    
-    ...
+    if 'val' in convergence_history:
+        loss = convergence_history['val']
+    elif 'train' in convergence_history:
+        loss = convergence_history['train']
+    else:
+        raise KeyError('Neither `train` nor `val` key is present in the convergence_history.')
+    if len(loss) > patience:
+        last_values = loss[-patience - 1:-1]
+        return all(last_values[i] <= last_values[i + 1] for i in range(patience - 1))
+    return False
