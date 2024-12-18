@@ -5,9 +5,12 @@ from typing import Any
 import joblib
 import numpy as np
 import numpy.typing as npt
-from sklearn.tree import DecisionTreeRegressor
 
-from .utils import ConvergenceHistory
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.utils import resample
+from sklearn.metrics import root_mean_squared_error
+
+from .utils import ConvergenceHistory, rmsle, whether_to_stop
 
 
 class RandomForestMSE:
@@ -53,10 +56,27 @@ class RandomForestMSE:
         Returns:
             ConvergenceHistory | None: Instance of `ConvergenceHistory` if `trace=True` or if validation data is provided.
         """
+        validation_provided = (X_val is not None) and (y_val is not None)
+        if trace is None:
+            trace = validation_provided
+        if trace:
+            if validation_provided:
+                history = ConvergenceHistory(train=[], val=[])
+            else:
+                history = ConvergenceHistory(train=[])
         
-        ...
+        for i, tree_model in enumerate(self.forest):
+            X_bootstrap, y_bootstrap = resample(X, y, random_state=42)
+            tree_model.fit(X_bootstrap, y_bootstrap)
+            if trace:
+                history['train'].append(root_mean_squared_error(y, self.predict(X, n_estimators=i+1)))
+                if validation_provided:
+                    history['val'].append(root_mean_squared_error(y_val, self.predict(X_val, n_estimators=i+1)))
+                if patience is not None and whether_to_stop(history, patience):
+                    break
+        return history if trace else None
 
-    def predict(self, X: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+    def predict(self, X: npt.NDArray[np.float64], n_estimators: int | None = None) -> npt.NDArray[np.float64]:
         """
         Make prediction with ensemble of trees.
 
@@ -64,12 +84,18 @@ class RandomForestMSE:
 
         Args:
             X (npt.NDArray[np.float64]): Objects' features matrix, array of shape (n_objects, n_features).
+            n_estimators (int | None): Count of trees in model to use
 
         Returns:
             npt.NDArray[np.float64]: Predicted values, array of shape (n_objects,).
         """
-        
-        ...
+        if n_estimators is None:
+            n_estimators = self.n_estimators
+
+        y_pred = np.zeros(X.shape[0])
+        for tree_model in self.forest[:n_estimators]:
+            y_pred += tree_model.predict(X)
+        return y_pred / n_estimators
 
     def dump(self, dirpath: str) -> None:
         """
