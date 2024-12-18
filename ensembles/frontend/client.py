@@ -1,10 +1,11 @@
 from typing import Any
-
+from io import BytesIO
 import numpy.typing as npt
 import requests
-
+import json
 from ensembles.utils import ConvergenceHistory
-
+import numpy as np
+from ensembles.backend.schemas import ExistingExperimentsResponse, ExperimentConfig, ConvergenceHistoryResponse
 
 class Client:
     def __init__(self, base_url: str) -> None:
@@ -30,7 +31,7 @@ class Client:
         response.raise_for_status()
         return response.json()["experiment_names"]
 
-    def register_experiment(self, experiment_config, train_file) -> None:
+    def register_experiment(self, experiment_config, train_file: BytesIO) -> None:
         """
         Registers a new experiment with the given configuration and training data.
 
@@ -38,8 +39,13 @@ class Client:
             experiment_config (Any): The configuration for the experiment.
             train_file (Any): The training data file.
         """
-
-        ...
+        response = self.session.post(
+            f"{self.base_url}/registered_experiment/",
+            files={'train_file': train_file.getvalue()},
+            data={'experiment_config': json.dumps(experiment_config.model_dump())}
+        )
+        response.raise_for_status()
+        return response
 
     def load_experiment_config(self, experiment_name) -> dict[str, Any]:
         """
@@ -51,8 +57,11 @@ class Client:
         Returns:
             ExperimentConfig: The configuration of the experiment.
         """
-
-        ...
+        response = self.session.get(
+            f"{self.base_url}/experiment_config/{experiment_name}"
+        )
+        response.raise_for_status()
+        return ExperimentConfig(**response.json())
 
     def is_training_needed(self, experiment_name) -> bool:
         """
@@ -64,6 +73,7 @@ class Client:
         Returns:
             bool: indicator was the model ever trained.
         """
+        # get needs_training
         ...
 
     def train_model(self, experiment_name) -> None:
@@ -73,10 +83,14 @@ class Client:
         Args:
             experiment_name (Any): The name of the experiment.
         """
+        # post training_model
+        response = self.session.post(
+            f"{self.base_url}/training_model", params={"experiment_name": experiment_name}
+        )
+        response.raise_for_status()
+        
 
-        ...
-
-    def get_convergence_history(self, experiment_name) -> ConvergenceHistory:
+    def get_convergence_history(self, experiment_name) -> ConvergenceHistoryResponse:
         """
         Retrieves the convergence history of the specified experiment.
 
@@ -86,8 +100,11 @@ class Client:
         Returns:
             ConvergenceHistory: The convergence history of the experiment.
         """
-
-        ...
+        # get convergence_history
+        response = self.session.get(
+            f"{self.base_url}/convergence_history/{experiment_name}"
+        )
+        return ConvergenceHistoryResponse(**response.json())
 
     def predict(self, experiment_name, test_file) -> npt.NDArray[Any]:
         """
@@ -100,5 +117,9 @@ class Client:
         Returns:
             npt.NDArray[Any]: The predictions made by the model.
         """
-
-        ...
+        response = self.session.get(
+            f"{self.base_url}/predicted_values/{experiment_name}",
+            files={'test_file': test_file}
+        )
+        response.raise_for_status()
+        return np.array(response.json())
