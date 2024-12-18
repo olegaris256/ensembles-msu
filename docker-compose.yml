@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: .
+    env_file:
+      - .env
+    container_name: backend-container
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "chmod +x /app/docker-scripts/backend.sh && /app/docker-scripts/backend.sh"
+    ports:
+      - 8000:8000
+  ui:
+    build: .
+    env_file:
+      - .env
+    container_name: ui-container
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "chmod +x /app/docker-scripts/ui.sh && /app/docker-scripts/ui.sh"
+    ports:
+      - 8501:8501

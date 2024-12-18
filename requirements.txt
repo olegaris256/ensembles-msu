@@ -1,0 +1,15 @@
+numpy
+pandas
+streamlit
+joblib
+python-dotenv
+scikit-learn
+typing
+pathlib
+fastapi
+pydantic
+plotly
+fastapi
+uvicorn
+python-multipart
+gunicorn
