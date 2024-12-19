@@ -1,6 +1,5 @@
 from typing import TypedDict
 
-import pandas as pd
 import numpy as np
 import numpy.typing as npt
 
