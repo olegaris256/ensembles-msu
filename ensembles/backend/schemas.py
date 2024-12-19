@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from pydantic import BaseModel
-from typing import TypedDict
+
 
 class ExistingExperimentsResponse(BaseModel):
     """
