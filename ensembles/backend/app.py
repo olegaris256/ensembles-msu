@@ -1,16 +1,17 @@
 from pathlib import Path
 
+from ensembles.random_forest import RandomForestMSE
+from ensembles.boosting import GradientBoostingMSE
+
 from fastapi import FastAPI, UploadFile, Form, File, HTTPException
 
 from .schemas import ExistingExperimentsResponse, ExperimentConfig
 import json
 from fastapi.responses import JSONResponse
 from io import BytesIO
-from typing import Annotated
+
 import pandas as pd
 
-from ensembles.random_forest import RandomForestMSE
-from ensembles.boosting import GradientBoostingMSE
 
 from sklearn.model_selection import train_test_split
 app = FastAPI()
@@ -66,7 +67,7 @@ async def registered_experiment(train_file: UploadFile = File(...), experiment_c
     exp_path.mkdir(parents=True, exist_ok=True)
     with (exp_path / 'config.json').open('w') as f:
         json.dump(experiment_config.dict(), f)
-    
+
     content = await train_file.read()
     if not content:
         raise HTTPException(status_code=400, detail="Загруженный файл пустой")
@@ -91,6 +92,7 @@ async def experiment_config(experiment_name: str):
         config = json.load(f)
     return config
 
+
 @app.get("/needs_training/")
 async def needs_training(experiment_name: str) -> JSONResponse:
     """
@@ -105,6 +107,7 @@ async def needs_training(experiment_name: str) -> JSONResponse:
     exp_path = get_runs_dir() / experiment_name
     model_path = exp_path / "model"
     return JSONResponse(content={"response": not model_path.exists()})
+
 
 @app.post("/training_model/")
 async def training_model(experiment_name: str):
@@ -146,7 +149,7 @@ async def training_model(experiment_name: str):
     model.dump(model_path)
     with (model_path / 'history.json').open('w') as f:
         json.dump(history, f)
-    
+
 
 @app.get("/convergence_history/{experiment_name}")
 async def convergence_history(experiment_name: str):
@@ -183,7 +186,7 @@ async def predicted_values(experiment_name: str, test_file: UploadFile = File(..
 
     config_path = exp_path / "config.json"
     model_path = exp_path / "model"
-    
+
     with config_path.open('r') as f:
         config = json.load(f)
     config = ExperimentConfig(**config)

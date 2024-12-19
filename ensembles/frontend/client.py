@@ -1,11 +1,14 @@
+import json
+
 from typing import Any
 from io import BytesIO
-import numpy.typing as npt
-import requests
-import json
-from ensembles.utils import ConvergenceHistory
+
 import numpy as np
-from ensembles.backend.schemas import ExistingExperimentsResponse, ExperimentConfig, ConvergenceHistoryResponse
+import numpy.typing as npt
+
+import requests
+from ensembles.backend.schemas import ExperimentConfig, ConvergenceHistoryResponse
+
 
 class Client:
     def __init__(self, base_url: str) -> None:
@@ -63,19 +66,6 @@ class Client:
         response.raise_for_status()
         return ExperimentConfig(**response.json())
 
-    def is_training_needed(self, experiment_name) -> bool:
-        """
-        Request info about was the model ever trained.
-
-        Args:
-            experiment_name (Any): The name of the experiment.
-        
-        Returns:
-            bool: indicator was the model ever trained.
-        """
-        # get needs_training
-        ...
-
     def train_model(self, experiment_name) -> None:
         """
         Trains the model for the specified experiment.
@@ -88,7 +78,6 @@ class Client:
             f"{self.base_url}/training_model", params={"experiment_name": experiment_name}
         )
         response.raise_for_status()
-        
 
     def get_convergence_history(self, experiment_name) -> ConvergenceHistoryResponse:
         """

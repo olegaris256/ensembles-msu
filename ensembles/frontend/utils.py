@@ -5,6 +5,9 @@ from ensembles.backend.schemas import ConvergenceHistoryResponse
 
 
 def plot_learning_curves(convergence_history: ConvergenceHistoryResponse):
+    """
+    Plot learning curve by 'ConvergenceHistoryResponse'
+    """
     df = pd.DataFrame(convergence_history.model_dump())
     df_melted = df.reset_index().melt(
         id_vars=["index"],
