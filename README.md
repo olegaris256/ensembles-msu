@@ -18,11 +18,3 @@ docker-compose up --build
 ```
 http://localhost:8501
 ```
-
-### -------
-
-Кроме того, есть образ на dockerhub, который может быть запущен с помощью команды:
-```
-docker run olegaris256/ensembles-msu:1.0
-```
-
